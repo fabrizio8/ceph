@@ -15,8 +15,9 @@ from ..security import Scope
 from ..services.cephfs import CephFS as CephFS_
 from ..services.ceph_service import CephService
 from ..tools import ViewCache
+import logging
 
-
+mylog = logging.getLogger('BREEZECEPHFS')
 @ApiController('/cephfs', Scope.CEPHFS)
 class CephFS(RESTController):
     def __init__(self):
@@ -394,6 +395,22 @@ class CephFS(RESTController):
         cfs = self._cephfs_instance(fs_id)
         cfs.mk_dirs(path)
 
+
+#    @RESTController.Resource('DELETE', path='/client/{client_id}')
+#    def evict(self, fs_id, client_id):
+#        fs_id = self.fs_id_to_int(fs_id)
+#        client_id = self.client_id_to_int(client_id)
+#
+#        return self._evict(fs_id, client_id)
+    # POST /cephfs/{fs_id}/rm_dir vs DELETE /cephfs/{fs_id}/dirA/dirB/dir_to_delete.
+    @RESTController.Resource('DELETE')
+    def testi(self, fs_id, path):
+        """
+        Remove a directory.
+        :param fs_id: The filesystem identifier.
+        :param path: The path of the directory.
+        """
+        mylog.critical("FS_ID: %s, PATH: %s", fs_id, path)
     @RESTController.Resource('POST')
     def rm_dir(self, fs_id, path):
         """
