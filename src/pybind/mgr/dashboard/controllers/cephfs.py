@@ -48,6 +48,28 @@ class CephFS(RESTController):
 
         return self._evict(fs_id, client_id)
 
+    @RESTController.Resource('DELETE')
+    def rm_dir(self, fs_id, path):
+        """
+        Remove a directory.
+        :param fs_id: The filesystem identifier.
+        :param path: The path of the directory.
+        """
+        mylog.critical("FS_ID: %s, PATH: %s", fs_id, path)
+        cfs = self._cephfs_instance(fs_id)
+        cfs.rm_dir(path)
+
+    @RESTController.Resource('DELETE')
+    def rm_snapshot(self, fs_id, path, name):
+        """
+        Remove a snapshot.
+        :param fs_id: The filesystem identifier.
+        :param path: The path of the directory.
+        :param name: The name of the snapshot.
+        """
+        cfs = self._cephfs_instance(fs_id)
+        cfs.rm_snapshot(path, name)
+
     @RESTController.Resource('GET')
     def mds_counters(self, fs_id, counters=None):
         fs_id = self.fs_id_to_int(fs_id)
@@ -396,31 +418,6 @@ class CephFS(RESTController):
         cfs.mk_dirs(path)
 
 
-#    @RESTController.Resource('DELETE', path='/client/{client_id}')
-#    def evict(self, fs_id, client_id):
-#        fs_id = self.fs_id_to_int(fs_id)
-#        client_id = self.client_id_to_int(client_id)
-#
-#        return self._evict(fs_id, client_id)
-    # POST /cephfs/{fs_id}/rm_dir vs DELETE /cephfs/{fs_id}/dirA/dirB/dir_to_delete.
-    @RESTController.Resource('DELETE')
-    def testi(self, fs_id, path):
-        """
-        Remove a directory.
-        :param fs_id: The filesystem identifier.
-        :param path: The path of the directory.
-        """
-        mylog.critical("FS_ID: %s, PATH: %s", fs_id, path)
-    @RESTController.Resource('POST')
-    def rm_dir(self, fs_id, path):
-        """
-        Remove a directory.
-        :param fs_id: The filesystem identifier.
-        :param path: The path of the directory.
-        """
-        cfs = self._cephfs_instance(fs_id)
-        cfs.rm_dir(path)
-
     @RESTController.Resource('POST')
     def mk_snapshot(self, fs_id, path, name=None):
         """
@@ -435,17 +432,6 @@ class CephFS(RESTController):
         """
         cfs = self._cephfs_instance(fs_id)
         return cfs.mk_snapshot(path, name)
-
-    @RESTController.Resource('POST')
-    def rm_snapshot(self, fs_id, path, name):
-        """
-        Remove a snapshot.
-        :param fs_id: The filesystem identifier.
-        :param path: The path of the directory.
-        :param name: The name of the snapshot.
-        """
-        cfs = self._cephfs_instance(fs_id)
-        cfs.rm_snapshot(path, name)
 
     @RESTController.Resource('GET')
     def get_quotas(self, fs_id, path):
@@ -471,7 +457,6 @@ class CephFS(RESTController):
         """
         cfs = self._cephfs_instance(fs_id)
         return cfs.set_quotas(path, max_bytes, max_files)
-
 
 class CephFSClients(object):
     def __init__(self, module_inst, fscid):
