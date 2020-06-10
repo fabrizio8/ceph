@@ -60,7 +60,7 @@ class DocsTest(ControllerTestCase):
         self.assertEqual(Docs()._type_to_str(str), "string")
 
     def test_gen_paths(self):
-        outcome = Docs()._gen_paths(False, "")['/api/doctest//decorated_func/{parameter}']['get']
+        outcome = Docs()._gen_paths(False)['/api/doctest//decorated_func/{parameter}']['get']
         self.assertIn('tags', outcome)
         self.assertIn('summary', outcome)
         self.assertIn('parameters', outcome)
