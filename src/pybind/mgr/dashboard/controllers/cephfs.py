@@ -15,9 +15,8 @@ from ..security import Scope
 from ..services.cephfs import CephFS as CephFS_
 from ..services.ceph_service import CephService
 from ..tools import ViewCache
-import logging
 
-mylog = logging.getLogger('BREEZECEPHFS')
+
 @ApiController('/cephfs', Scope.CEPHFS)
 class CephFS(RESTController):
     def __init__(self):
@@ -55,7 +54,6 @@ class CephFS(RESTController):
         :param fs_id: The filesystem identifier.
         :param path: The path of the directory.
         """
-        mylog.critical("FS_ID: %s, PATH: %s", fs_id, path)
         cfs = self._cephfs_instance(fs_id)
         cfs.rm_dir(path)
 
@@ -417,7 +415,6 @@ class CephFS(RESTController):
         cfs = self._cephfs_instance(fs_id)
         cfs.mk_dirs(path)
 
-
     @RESTController.Resource('POST')
     def mk_snapshot(self, fs_id, path, name=None):
         """
@@ -457,6 +454,7 @@ class CephFS(RESTController):
         """
         cfs = self._cephfs_instance(fs_id)
         return cfs.set_quotas(path, max_bytes, max_files)
+
 
 class CephFSClients(object):
     def __init__(self, module_inst, fscid):

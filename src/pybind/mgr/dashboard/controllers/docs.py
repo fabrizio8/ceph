@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+from typing import Any, Dict, Union
 
 import logging
 import cherrypy
@@ -31,7 +32,7 @@ class Docs(BaseController):
                 if endpoint.is_api or all_endpoints:
                     list_of_ctrl.add(endpoint.ctrl)
 
-        tag_map = {}
+        tag_map: Dict[str, str] = {}
         for ctrl in list_of_ctrl:
             tag_name = ctrl.__name__
             tag_descr = ""
@@ -183,7 +184,7 @@ class Docs(BaseController):
 
     @classmethod
     def _gen_responses(cls, method, resp_object=None):
-        resp = {
+        resp: Dict[str, Dict[str, Union[str, Any]]] = {
             '400': {
                 "description": "Operation exception. Please check the "
                                "response body for details."
@@ -218,7 +219,6 @@ class Docs(BaseController):
                     'content': {
                         'application/json': {
                             'schema': cls._gen_schema_for_content(response_body)}}})
-
         return resp
 
     @classmethod
@@ -252,7 +252,7 @@ class Docs(BaseController):
         return parameters
 
     @classmethod
-    def _gen_paths(cls, all_endpoints, base_url):
+    def _gen_paths(cls, all_endpoints):
         method_order = ['get', 'post', 'put', 'delete']
         paths = {}
         for path, endpoints in sorted(list(ENDPOINT_MAP.items()),
@@ -320,7 +320,7 @@ class Docs(BaseController):
         host = host[host.index(':')+3:]
         logger.debug("Host: %s", host)
 
-        paths = self._gen_paths(all_endpoints, base_url)
+        paths = self._gen_paths(all_endpoints)
 
         if not base_url:
             base_url = "/"
