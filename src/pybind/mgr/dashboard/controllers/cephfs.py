@@ -5,6 +5,7 @@ from collections import defaultdict
 
 import os
 
+import logging
 import cherrypy
 import cephfs
 
@@ -15,7 +16,6 @@ from ..security import Scope
 from ..services.cephfs import CephFS as CephFS_
 from ..services.ceph_service import CephService
 from ..tools import ViewCache
-import logging
 
 mylog = logging.getLogger('BREEZECEPHFS')
 @ApiController('/cephfs', Scope.CEPHFS)
@@ -49,7 +49,7 @@ class CephFS(RESTController):
         return self._evict(fs_id, client_id)
 
     @RESTController.Resource('DELETE')
-    def rm_dir(self, fs_id, path):
+    def rm_dir(self, fs_id, path='/{path_to_delete}'):
         """
         Remove a directory.
         :param fs_id: The filesystem identifier.
@@ -417,7 +417,6 @@ class CephFS(RESTController):
         cfs = self._cephfs_instance(fs_id)
         cfs.mk_dirs(path)
 
-
     @RESTController.Resource('POST')
     def mk_snapshot(self, fs_id, path, name=None):
         """
@@ -457,6 +456,7 @@ class CephFS(RESTController):
         """
         cfs = self._cephfs_instance(fs_id)
         return cfs.set_quotas(path, max_bytes, max_files)
+
 
 class CephFSClients(object):
     def __init__(self, module_inst, fscid):

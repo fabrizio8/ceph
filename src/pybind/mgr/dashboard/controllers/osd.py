@@ -18,7 +18,7 @@ from ..services.exception import handle_send_command_error, handle_orchestrator_
 from ..services.orchestrator import OrchClient
 from ..tools import str_to_bool
 try:
-    from typing import Dict, List, Any, Union  # noqa: F401 pylint: disable=unused-import
+    from typing import Any, Dict, List, Optional, Union  # noqa: F401 pylint: disable=unused-import
 except ImportError:
     pass  # For typing only
 
@@ -72,7 +72,7 @@ class Osd(RESTController):
 
     @staticmethod
     def get_osd_map(svc_id=None):
-        # type: (Union[int, None]) -> Dict[int, Union[dict, Any]]
+        # type: (Optional[int]) -> Dict[int, Union[dict, Any]]
         def add_id(osd):
             osd['id'] = osd['osd']
             return osd
@@ -183,16 +183,22 @@ class Osd(RESTController):
         CephService.send_command("mon", api_scrub, who=svc_id)
 
     @RESTController.Resource('POST')
-    def mark_out(self, svc_id):
-        CephService.send_command('mon', 'osd out', ids=[svc_id])
+    def mark(self, svc_id, action):
+        """
+        Note: osd must be marked `down` before marking lost.
+        """
+        valid_actions = ['out', 'in', 'down', 'lost']
+        if action in valid_actions:
+            if action == 'down':
+                CephService.send_command(
+                    'mon',
+                    'osd lost',
+                    id=int(svc_id),
+                    yes_i_really_mean_it=True)
 
-    @RESTController.Resource('POST')
-    def mark_in(self, svc_id):
-        CephService.send_command('mon', 'osd in', ids=[svc_id])
-
-    @RESTController.Resource('POST')
-    def mark_down(self, svc_id):
-        CephService.send_command('mon', 'osd down', ids=[svc_id])
+            CephService.send_command('mon', 'osd ' + action, ids=[svc_id])
+        else:
+            logger.error("Invalid OSD mark action: %s attempted on SVC_ID: %s", action, svc_id)
 
     @RESTController.Resource('POST')
     def reweight(self, svc_id, weight):
@@ -214,17 +220,6 @@ class Osd(RESTController):
             'osd reweight',
             id=int(svc_id),
             weight=float(weight))
-
-    @RESTController.Resource('POST')
-    def mark_lost(self, svc_id):
-        """
-        Note: osd must be marked `down` before marking lost.
-        """
-        CephService.send_command(
-            'mon',
-            'osd lost',
-            id=int(svc_id),
-            yes_i_really_mean_it=True)
 
     def _create_bare(self, data):
         """Create a OSD container that has no associated device.
