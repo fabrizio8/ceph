@@ -3,7 +3,8 @@ from __future__ import absolute_import
 
 from cherrypy import NotFound
 
-from . import ApiController, ControllerDoc, RESTController, Endpoint, ReadPermission, UiApiController
+from . import ApiController, ControllerDoc, RESTController, Endpoint, ReadPermission, \
+    UiApiController
 from ..security import Scope
 from ..services.ceph_service import CephService
 from .. import mgr
