@@ -182,13 +182,15 @@ class Osd(RESTController):
         api_scrub = "osd deep-scrub" if str_to_bool(deep) else "osd scrub"
         CephService.send_command("mon", api_scrub, who=svc_id)
 
-    @RESTController.Resource('POST')
+    @RESTController.Resource('PUT', path='/{action}')
+    # @EndpointDoc("Mark OSD {out, in, down, lost}",
+    #             parameters=dict((str, 'SVC ID'), (str, 'action'))
     def mark(self, svc_id, action):
         """
         Note: osd must be marked `down` before marking lost.
         """
         valid_actions = ['out', 'in', 'down', 'lost']
-        if action in valid_actions:
+        if action.lower() in valid_actions:
             if action == 'down':
                 CephService.send_command(
                     'mon',

@@ -48,27 +48,27 @@ class CephFS(RESTController):
 
         return self._evict(fs_id, client_id)
 
-    @RESTController.Resource('DELETE')
-    def rm_dir(self, fs_id, path='/{path_to_delete}'):
+    @RESTController.Resource('DELETE', path='/{dir_path}')
+    def rm_dir(self, fs_id, dir_path):
         """
         Remove a directory.
         :param fs_id: The filesystem identifier.
-        :param path: The path of the directory.
+        :param dir_path: The path of the directory.
         """
-        mylog.critical("FS_ID: %s, PATH: %s", fs_id, path)
+        mylog.critical("FS_ID: %s, PATH: %s", fs_id, dir_path)
         cfs = self._cephfs_instance(fs_id)
-        cfs.rm_dir(path)
+        cfs.rm_dir(dir_path)
 
-    @RESTController.Resource('DELETE')
-    def rm_snapshot(self, fs_id, path, name):
+    @RESTController.Resource('DELETE', path='/{snapshot_path}')
+    def rm_snapshot(self, fs_id, snapshot_path, name):
         """
         Remove a snapshot.
         :param fs_id: The filesystem identifier.
-        :param path: The path of the directory.
+        :param snapshot_path: The path of the directory.
         :param name: The name of the snapshot.
         """
         cfs = self._cephfs_instance(fs_id)
-        cfs.rm_snapshot(path, name)
+        cfs.rm_snapshot(snapshot_path, name)
 
     @RESTController.Resource('GET')
     def mds_counters(self, fs_id, counters=None):
@@ -407,7 +407,7 @@ class CephFS(RESTController):
             path = os.path.normpath(path)
         return path
 
-    @RESTController.Resource('POST')
+    @RESTController.Resource('POST', path='{dir}')
     def mk_dirs(self, fs_id, path):
         """
         Create a directory.
