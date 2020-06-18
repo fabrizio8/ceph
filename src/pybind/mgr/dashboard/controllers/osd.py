@@ -7,7 +7,7 @@ import time
 from ceph.deployment.drive_group import DriveGroupSpec, DriveGroupValidationError
 from mgr_util import get_most_recent_rate
 
-from . import ApiController, RESTController, Endpoint, Task
+from . import ApiController, RESTController, Endpoint, EndpointDoc, Task
 from . import CreatePermission, ReadPermission, UpdatePermission, DeletePermission
 from .orchestrator import raise_if_no_orchestrator
 from .. import mgr
@@ -183,22 +183,22 @@ class Osd(RESTController):
         CephService.send_command("mon", api_scrub, who=svc_id)
 
     @RESTController.Resource('PUT', path='/{action}')
-    # @EndpointDoc("Mark OSD {out, in, down, lost}",
-    #             parameters=dict((str, 'SVC ID'), (str, 'action'))
+    @EndpointDoc("Mark OSD {out, in, down, lost}",
+                 parameters={
+                     'svc_id': (str, 'SVC ID'),
+                     'action': (str, 'out, in, down, or lost')
+                     })
     def mark(self, svc_id, action):
         """
         Note: osd must be marked `down` before marking lost.
         """
         valid_actions = ['out', 'in', 'down', 'lost']
+        args = {'srv_type': 'mon', 'prefix': ' osd ' + action, 'ids': [svc_id]}
         if action.lower() in valid_actions:
-            if action == 'down':
-                CephService.send_command(
-                    'mon',
-                    'osd lost',
-                    id=int(svc_id),
-                    yes_i_really_mean_it=True)
+            if action == 'lost':
+                args['yes_i_really_mean_it'] = True
 
-            CephService.send_command('mon', 'osd ' + action, ids=[svc_id])
+            CephService.send_command(**args)
         else:
             logger.error("Invalid OSD mark action: %s attempted on SVC_ID: %s", action, svc_id)
 

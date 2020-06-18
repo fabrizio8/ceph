@@ -372,7 +372,6 @@ class Docs(BaseController):
 
     def _swagger_ui_page(self, all_endpoints=False, token=None):
         base = cherrypy.request.base
-        logger.critical(("BREEZE BASE: %s", base))
         if all_endpoints:
             spec_url = "{}/docs/api-all.json".format(base)
         else:

@@ -177,6 +177,7 @@ class CephService(object):
         :raises TimedOut: See rados.make_ex
         :raises ValueError: return code != 0
         """
+        logger.critical("BREEZE: %s %s %s, %s", srv_type, prefix, srv_spec, kwargs)
         argdict = {
             "prefix": prefix,
             "format": "json",
