@@ -7,7 +7,7 @@ import time
 from ceph.deployment.drive_group import DriveGroupSpec, DriveGroupValidationError
 from mgr_util import get_most_recent_rate
 
-from . import ApiController, RESTController, Endpoint, EndpointDoc, Task
+from . import ApiController, RESTController, ControllerDoc, Endpoint, EndpointDoc, Task
 from . import CreatePermission, ReadPermission, UpdatePermission, DeletePermission
 from .orchestrator import raise_if_no_orchestrator
 from .. import mgr
@@ -17,11 +17,11 @@ from ..services.ceph_service import CephService, SendCommandError
 from ..services.exception import handle_send_command_error, handle_orchestrator_error
 from ..services.orchestrator import OrchClient
 from ..tools import str_to_bool
+
 try:
     from typing import Any, Dict, List, Optional, Union  # noqa: F401 pylint: disable=unused-import
 except ImportError:
     pass  # For typing only
-
 
 logger = logging.getLogger('controllers.osd')
 
@@ -31,6 +31,7 @@ def osd_task(name, metadata, wait_for=2.0):
 
 
 @ApiController('/osd', Scope.OSD)
+@ControllerDoc('Osd Management API', 'Osd')
 class Osd(RESTController):
     def list(self):
         osds = self.get_osd_map()
@@ -146,12 +147,33 @@ class Osd(RESTController):
         checks = health['checks'].keys()
         unsafe_checks = set(['OSD_FULL', 'OSD_BACKFILLFULL', 'OSD_NEARFULL'])
         failed_checks = checks & unsafe_checks
-        msg = 'Removing OSD(s) is not recommended because of these failed health check(s): {}.'.\
+        msg = 'Removing OSD(s) is not recommended because of these failed health check(s): {}.'. \
             format(', '.join(failed_checks)) if failed_checks else ''
         return {
             'safe': not bool(failed_checks),
             'message': msg
         }
+
+    @RESTController.Resource('PUT')
+    @EndpointDoc("Mark OSD {out, in, down, lost}",
+                 parameters={'svc_id': (str, 'SVC ID')})
+    def mark(self, svc_id, action):
+        """
+        Note: osd must be marked `down` before marking lost.
+        """
+        logger.critical('MARK EXEC')
+        valid_actions = ['out', 'in', 'down', 'lost']
+        args = {'srv_type': 'mon', 'prefix': 'osd ' + action}
+        if action.lower() in valid_actions:
+            if action == 'lost':
+                args['id'] = int(svc_id)
+                args['--yes_i_really_mean_it'] = True
+            else:
+                args['ids'] = [svc_id]
+
+            CephService.send_command(**args)
+        else:
+            logger.error("Invalid OSD mark action: %s attempted on SVC_ID: %s", action, svc_id)
 
     @DeletePermission
     @raise_if_no_orchestrator
@@ -181,26 +203,6 @@ class Osd(RESTController):
     def scrub(self, svc_id, deep=False):
         api_scrub = "osd deep-scrub" if str_to_bool(deep) else "osd scrub"
         CephService.send_command("mon", api_scrub, who=svc_id)
-
-    @RESTController.Resource('PUT', path='/{action}')
-    @EndpointDoc("Mark OSD {out, in, down, lost}",
-                 parameters={
-                     'svc_id': (str, 'SVC ID'),
-                     'action': (str, 'out, in, down, or lost')
-                     })
-    def mark(self, svc_id, action):
-        """
-        Note: osd must be marked `down` before marking lost.
-        """
-        valid_actions = ['out', 'in', 'down', 'lost']
-        args = {'srv_type': 'mon', 'prefix': ' osd ' + action, 'ids': [svc_id]}
-        if action.lower() in valid_actions:
-            if action == 'lost':
-                args['yes_i_really_mean_it'] = True
-
-            CephService.send_command(**args)
-        else:
-            logger.error("Invalid OSD mark action: %s attempted on SVC_ID: %s", action, svc_id)
 
     @RESTController.Resource('POST')
     def reweight(self, svc_id, weight):
@@ -331,6 +333,7 @@ class Osd(RESTController):
 
 
 @ApiController('/osd/flags', Scope.OSD)
+@ControllerDoc(group='Osd')
 class OsdFlagsController(RESTController):
     @staticmethod
     def _osd_flags():

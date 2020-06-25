@@ -407,7 +407,7 @@ class CephFS(RESTController):
             path = os.path.normpath(path)
         return path
 
-    @RESTController.Resource('POST', path='{dir}')
+    @RESTController.Resource('POST')
     def mk_dirs(self, fs_id, path):
         """
         Create a directory.
