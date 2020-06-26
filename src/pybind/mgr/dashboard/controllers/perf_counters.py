@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 import cherrypy
 
-from . import ApiController, RESTController
+from . import ApiController, ControllerDoc, RESTController
 from .. import mgr
 from ..security import Scope
 from ..services.ceph_service import CephService
@@ -54,7 +54,8 @@ class MonPerfCounter(PerfCounter):
     service_type = 'mon'
 
 
-@ApiController('perf_counters/osd', Scope.OSD)
+@ApiController('/osd/perf_counter', Scope.OSD)
+@ControllerDoc(group='Osd')
 class OsdPerfCounter(PerfCounter):
     service_type = 'osd'
 

@@ -258,7 +258,7 @@ class CRUSHMap(ceph_module.BasePyCRUSH):
         return osd_list
 
     def device_class_counts(self):
-        result = defaultdict(int)  # type: Dict[str, int]
+        result: Dict[str, int] = defaultdict(int)
         # TODO don't abuse dump like this
         d = self.dump()
         for device in d['devices']:
@@ -277,7 +277,7 @@ class CLICommand(object):
         self.args_dict = {}
         self.desc = desc
         self.perm = perm
-        self.func = None  # type: Optional[Callable]
+        self.func: Optional[Callable] = None
         self._parse_args()
 
     def _parse_args(self):
@@ -359,6 +359,7 @@ class Option(dict):
             (k, v) for k, v in vars().items()
             if k != 'self' and v is not None)
 
+
 class Command(dict):
     """
     Helper class to declare options for COMMANDS list.
@@ -416,11 +417,12 @@ class CPlusPlusHandler(logging.Handler):
         super(CPlusPlusHandler, self).__init__()
         self._module = module_inst
         self.setFormatter(logging.Formatter("[{} %(levelname)-4s %(name)s] %(message)s"
-                          .format(module_inst.module_name)))
+                                            .format(module_inst.module_name)))
 
     def emit(self, record):
         if record.levelno >= self.level:
             self._module._ceph_log(self.format(record))
+
 
 class ClusterLogHandler(logging.Handler):
     def __init__(self, module_inst):
@@ -442,6 +444,7 @@ class ClusterLogHandler(logging.Handler):
                                      level,
                                      self.format(record))
 
+
 class FileHandler(logging.FileHandler):
     def __init__(self, module_inst):
         path = module_inst.get_ceph_option("log_file")
@@ -451,7 +454,8 @@ class FileHandler(logging.FileHandler):
         else:
             self.path = "{}.{}".format(path, module_inst.module_name)
         super(FileHandler, self).__init__(self.path, delay=True)
-        self.setFormatter(logging.Formatter("%(asctime)s [%(threadName)s] [%(levelname)-4s] [%(name)s] %(message)s"))
+        self.setFormatter(logging.Formatter(
+            "%(asctime)s [%(threadName)s] [%(levelname)-4s] [%(name)s] %(message)s"))
 
 
 class MgrModuleLoggingMixin(object):
@@ -480,11 +484,12 @@ class MgrModuleLoggingMixin(object):
         self._root_logger.setLevel(logging.NOTSET)
         self._set_log_level(mgr_level, module_level, cluster_level)
 
-
     def _unconfigure_logging(self):
         # remove existing handlers:
         rm_handlers = [
-            h for h in self._root_logger.handlers if isinstance(h, CPlusPlusHandler) or isinstance(h, FileHandler) or isinstance(h, ClusterLogHandler)]
+            h for h in self._root_logger.handlers if
+            isinstance(h, CPlusPlusHandler) or isinstance(h, FileHandler) or isinstance(h,
+                                                                                        ClusterLogHandler)]
         for h in rm_handlers:
             self._root_logger.removeHandler(h)
         self.log_to_file = False
@@ -506,7 +511,8 @@ class MgrModuleLoggingMixin(object):
 
         if not self._module_level and not module_level:
             level = self._ceph_log_level_to_python(mgr_level)
-            self.getLogger().debug("setting log level based on debug_mgr: %s (%s)", level, mgr_level)
+            self.getLogger().debug("setting log level based on debug_mgr: %s (%s)", level,
+                                   mgr_level)
         elif self._module_level and not module_level:
             level = self._ceph_log_level_to_python(mgr_level)
             self.getLogger().warning("unsetting module log level, falling back to "
@@ -577,8 +583,8 @@ class MgrStandbyModule(ceph_module.BaseMgrStandbyModule, MgrModuleLoggingMixin):
     from their active peer), and to configuration settings (read only).
     """
 
-    MODULE_OPTIONS = []  # type: List[Dict[str, Any]]
-    MODULE_OPTION_DEFAULTS = {}  # type: Dict[str, Any]
+    MODULE_OPTIONS: List[Dict[str, Any]] = []
+    MODULE_OPTION_DEFAULTS: Dict[str, Any] = {}
 
     def __init__(self, module_name, capsule):
         super(MgrStandbyModule, self).__init__(capsule)
@@ -678,9 +684,9 @@ class MgrStandbyModule(ceph_module.BaseMgrStandbyModule, MgrModuleLoggingMixin):
 
 
 class MgrModule(ceph_module.BaseMgrModule, MgrModuleLoggingMixin):
-    COMMANDS = []  # type: List[Any]
-    MODULE_OPTIONS = []  # type: List[dict]
-    MODULE_OPTION_DEFAULTS = {}  # type: Dict[str, Any]
+    COMMANDS: List[Any] = []
+    MODULE_OPTIONS: List[dict] = []
+    MODULE_OPTION_DEFAULTS: Dict[str, Any] = {}
 
     # Priority definitions for perf counters
     PRIO_CRITICAL = 10
@@ -743,7 +749,6 @@ class MgrModule(ceph_module.BaseMgrModule, MgrModuleLoggingMixin):
 
         # Keep a librados instance for those that need it.
         self._rados = None
-
 
     def __del__(self):
         self._unconfigure_logging()
@@ -908,10 +913,11 @@ class MgrModule(ceph_module.BaseMgrModule, MgrModuleLoggingMixin):
 
         return ''
 
-    def _perfpath_to_path_labels(self, daemon, path):
-        # type: (str, str) -> Tuple[str, Tuple[str, ...], Tuple[str, ...]]
-        label_names = ("ceph_daemon",)  # type: Tuple[str, ...]
-        labels = (daemon,)  # type: Tuple[str, ...]
+    def _perfpath_to_path_labels(self, daemon: str, path: str) \
+            -> Tuple[str, Tuple[str, ...], Tuple[str, ...]]:
+
+        label_names: Tuple[str, ...] = ("ceph_daemon",)
+        labels: Tuple[str, ...] = (daemon,)
 
         if daemon.startswith('rbd-mirror.'):
             match = re.match(
@@ -1395,7 +1401,7 @@ class MgrModule(ceph_module.BaseMgrModule, MgrModuleLoggingMixin):
         value.
         """
 
-        result = defaultdict(dict)  # type: Dict[str, dict]
+        result: Dict[str, dict] = defaultdict(dict)
 
         for server in self.list_servers():
             for service in server['services']:
