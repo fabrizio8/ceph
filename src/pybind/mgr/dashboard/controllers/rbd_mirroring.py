@@ -11,7 +11,7 @@ import cherrypy
 
 import rbd
 
-from . import ApiController, Endpoint, Task, BaseController, ReadPermission, \
+from . import ApiController, BaseController, ControllerDoc, Endpoint, Task, ReadPermission, \
     UpdatePermission, RESTController
 
 from .. import mgr
@@ -336,6 +336,7 @@ def _reset_view_cache():
 
 
 @ApiController('/block/mirroring', Scope.RBD_MIRRORING)
+@ControllerDoc(group='Rbd')
 class RbdMirroring(BaseController):
 
     @Endpoint(method='GET', path='site_name')

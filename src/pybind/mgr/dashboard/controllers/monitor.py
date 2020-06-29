@@ -3,12 +3,13 @@ from __future__ import absolute_import
 
 import json
 
-from . import ApiController, Endpoint, BaseController, ReadPermission
+from . import ApiController, BaseController, ControllerDoc, Endpoint, ReadPermission
 from .. import mgr
 from ..security import Scope
 
 
 @ApiController('/monitor', Scope.MONITOR)
+@ControllerDoc(group='Mon')
 class Monitor(BaseController):
     @Endpoint()
     @ReadPermission

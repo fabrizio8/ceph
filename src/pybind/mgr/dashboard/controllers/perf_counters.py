@@ -50,6 +50,7 @@ class MdsPerfCounter(PerfCounter):
 
 
 @ApiController('perf_counters/mon', Scope.MONITOR)
+@ControllerDoc(group='Mon')
 class MonPerfCounter(PerfCounter):
     service_type = 'mon'
 
@@ -60,12 +61,14 @@ class OsdPerfCounter(PerfCounter):
     service_type = 'osd'
 
 
-@ApiController('perf_counters/rgw', Scope.RGW)
+@ApiController('/rgw/perf_counter', Scope.RGW)
+@ControllerDoc(group='Rgw')
 class RgwPerfCounter(PerfCounter):
     service_type = 'rgw'
 
 
-@ApiController('perf_counters/rbd-mirror', Scope.RBD_MIRRORING)
+@ApiController('/block/mirroring/perf_counters', Scope.RBD_MIRRORING)
+@ControllerDoc(group='Rbd')
 class RbdMirrorPerfCounter(PerfCounter):
     service_type = 'rbd-mirror'
 

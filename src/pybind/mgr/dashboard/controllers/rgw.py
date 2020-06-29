@@ -6,7 +6,7 @@ import json
 
 import cherrypy
 
-from . import ApiController, BaseController, RESTController, Endpoint, \
+from . import ApiController, BaseController, ControllerDoc, RESTController, Endpoint, \
     ReadPermission
 from ..exceptions import DashboardException
 from ..rest_client import RequestException
@@ -25,6 +25,7 @@ logger = logging.getLogger('controllers.rgw')
 
 
 @ApiController('/rgw', Scope.RGW)
+@ControllerDoc(group='Rgw')
 class Rgw(BaseController):
     @Endpoint()
     @ReadPermission
