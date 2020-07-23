@@ -74,7 +74,7 @@ class CephFS(RESTController):
                 "mds_mem.ino"
             ]
 
-        result = {}  # type: dict
+        result: dict = {}
         mds_names = self._get_mds_names(fs_id)
 
         for mds_name in mds_names:
@@ -129,7 +129,7 @@ class CephFS(RESTController):
 
     # pylint: disable=too-many-statements,too-many-branches
     def fs_status(self, fs_id):
-        mds_versions = defaultdict(list)  # type: dict
+        mds_versions: dict = defaultdict(list)
 
         fsmap = mgr.get("fs_map")
         filesystem = None
@@ -384,8 +384,21 @@ class CephFS(RESTController):
             path = os.path.normpath(path)
         return path
 
-    @RESTController.Resource('POST')
-    def mk_dirs(self, fs_id, path):
+
+class CephFSClients(object):
+    def __init__(self, module_inst, fscid):
+        self._module = module_inst
+        self.fscid = fscid
+
+    @ViewCache()
+    def get(self):
+        return CephService.send_command('mds', 'session ls', srv_spec='{0}:0'.format(self.fscid))
+
+
+@ApiController('/cephfs/tree', Scope.CEPHFS)
+class CephFSTreeController(RESTController):
+    @RESTController.Resource('POST', path='/{dir_path}')
+    def tree(self, fs_id, path):
         """
         Create a directory.
         :param fs_id: The filesystem identifier.
@@ -394,8 +407,8 @@ class CephFS(RESTController):
         cfs = self._cephfs_instance(fs_id)
         cfs.mk_dirs(path)
 
-    @RESTController.Resource('POST')
-    def rm_dir(self, fs_id, path):
+    @RESTController.Resource('DELETE', path='/{dir_path}')  # noqa: F811
+    def tree(self, fs_id, path):  # noqa: E0102
         """
         Remove a directory.
         :param fs_id: The filesystem identifier.
@@ -404,8 +417,43 @@ class CephFS(RESTController):
         cfs = self._cephfs_instance(fs_id)
         cfs.rm_dir(path)
 
-    @RESTController.Resource('POST')
-    def mk_snapshot(self, fs_id, path, name=None):
+
+@ApiController('/cephfs/quota', Scope.CEPHFS)
+class CephFSQuotaController(RESTController):
+    RESOURCE_ID = 'fs_id'
+
+    @RESTController.Resource('PUT')
+    def quota(self, fs_id, path, max_bytes=None, max_files=None):
+        """
+        Set the quotas of the specified path.
+        :param fs_id: The filesystem identifier.
+        :param path: The path of the directory/file.
+        :param max_bytes: The byte limit.
+        :param max_files: The file limit.
+        """
+        cfs = self._cephfs_instance(fs_id)
+        return cfs.set_quotas(path, max_bytes, max_files)
+
+    @RESTController.Resource('GET')  # noqa: F811
+    def quota(self, fs_id, path):  # noqa: E0102
+        """
+        Get the quotas of the specified path.
+        :param fs_id: The filesystem identifier.
+        :param path: The path of the directory/file.
+        :return: Returns a dictionary containing 'max_bytes'
+            and 'max_files'.
+        :rtype: dict
+        """
+        cfs = self._cephfs_instance(fs_id)
+        return cfs.get_quotas(path)
+
+
+@ApiController('/cephfs/snapshot', Scope.CEPHFS)
+class CephFSSnapshotController(RESTController):
+    RESOURCE_ID = 'fs_id'
+
+    @RESTController.Resource('POST', path='/{snapshot_dir}')
+    def snapshot(self, fs_id, path, name=None):
         """
         Create a snapshot.
         :param fs_id: The filesystem identifier.
@@ -419,8 +467,8 @@ class CephFS(RESTController):
         cfs = self._cephfs_instance(fs_id)
         return cfs.mk_snapshot(path, name)
 
-    @RESTController.Resource('POST')
-    def rm_snapshot(self, fs_id, path, name):
+    @RESTController.Resource('DELETE', path='/{snapshot_dir}')  # noqa: F811
+    def snapshot(self, fs_id, path, name):  # noqa: E0102
         """
         Remove a snapshot.
         :param fs_id: The filesystem identifier.
@@ -429,41 +477,6 @@ class CephFS(RESTController):
         """
         cfs = self._cephfs_instance(fs_id)
         cfs.rm_snapshot(path, name)
-
-    @RESTController.Resource('GET')
-    def get_quotas(self, fs_id, path):
-        """
-        Get the quotas of the specified path.
-        :param fs_id: The filesystem identifier.
-        :param path: The path of the directory/file.
-        :return: Returns a dictionary containing 'max_bytes'
-            and 'max_files'.
-        :rtype: dict
-        """
-        cfs = self._cephfs_instance(fs_id)
-        return cfs.get_quotas(path)
-
-    @RESTController.Resource('POST')
-    def set_quotas(self, fs_id, path, max_bytes=None, max_files=None):
-        """
-        Set the quotas of the specified path.
-        :param fs_id: The filesystem identifier.
-        :param path: The path of the directory/file.
-        :param max_bytes: The byte limit.
-        :param max_files: The file limit.
-        """
-        cfs = self._cephfs_instance(fs_id)
-        return cfs.set_quotas(path, max_bytes, max_files)
-
-
-class CephFSClients(object):
-    def __init__(self, module_inst, fscid):
-        self._module = module_inst
-        self.fscid = fscid
-
-    @ViewCache()
-    def get(self):
-        return CephService.send_command('mds', 'session ls', srv_spec='{0}:0'.format(self.fscid))
 
 
 @UiApiController('/cephfs', Scope.CEPHFS)

@@ -494,7 +494,7 @@ export class CephfsDirectoriesComponent implements OnInit, OnChanges {
         : values[key] === 0
         ? this.actionLabels.UNSET
         : this.i18n('Updated');
-    this.cephfsService.updateQuota(this.id, path, values).subscribe(() => {
+    this.cephfsService.quota(this.id, path, values).subscribe(() => {
       if (onSuccess) {
         onSuccess();
       }
